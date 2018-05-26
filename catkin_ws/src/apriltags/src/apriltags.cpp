@@ -71,8 +71,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "apriltags.h"
 #include <apriltags/AprilTagDetections.h>
 
-
+#include "LandingPlatform.h"
 using namespace std;
+Platform_tag TAGS; //to have access to the transfomation matrix of the landing pad.
+//via SetMatrix() function.
+
 
 // Functions
 
@@ -365,6 +368,39 @@ void ImageCallback(const sensor_msgs::ImageConstPtr& msg)
             marker_transform.scale.y = tag_size;
             marker_transform.scale.z = marker_thickness_;
         }
+
+	
+	//Move the xyz position of a each tag in the centre of the platform.
+
+		
+		if(detections[i].id == 0){
+			pose = pose * TAGS.TAG0_T_TAG4; 
+			//pose = TAGS.TAG4_T_TAG0*pose; 
+		}		
+
+		if(detections[i].id == 1){
+			pose = pose * TAGS.TAG1_T_TAG4;
+			//pose = TAGS.TAG4_T_TAG1*pose;
+		
+		}		
+
+		if(detections[i].id == 2){
+			pose = pose * TAGS.TAG2_T_TAG4;
+			//pose = TAGS.TAG4_T_TAG2*pose;
+	
+		}		
+
+		if(detections[i].id == 3){
+			pose = pose * TAGS.TAG3_T_TAG4;
+			//pose = TAGS.TAG4_T_TAG3*pose;
+
+		}		
+
+
+pose = TAGS.robot_T_cam * pose; //respect to the robot frame
+
+
+
         marker_transform.action = visualization_msgs::Marker::ADD;
         marker_transform.pose.position.x = pose(0,3);
         marker_transform.pose.position.y = pose(1,3);
@@ -562,6 +598,8 @@ void InitializeROSNode(int argc, char **argv)
 
 int main(int argc, char **argv)
 {
+    SetMatrix(&TAGS);
+
     InitializeROSNode(argc,argv);
     GetParameterValues();
     SetupPublisher();
